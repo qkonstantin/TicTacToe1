@@ -1,193 +1,84 @@
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-
 public class Controller {
-    public Label labelWinner, scoreX, scoreO, who;
     private String symbol;
-    private int plX = 0;
-    private int plO = 0;
-    public Button field00, field01, field02, field10, field11, field12, field20, field21, field22, playAgain;
+    private int scoreX = 0;
+    private int scoreO = 0;
     private int i = 1;
-    private static String[][] table = {
-            {" ", " ", " "},
-            {" ", " ", " "},
-            {" ", " ", " "}
-    };
+    private Model model;
+    private View view;
 
-    @FXML
-    void onField00Click() {
-        game();
-        field00.setText(symbol);
-        table[0][0] = symbol;
-        field00.setDisable(true);
-        checkWinner();
+    public Controller(View view, Model model) {
+        this.view = view;
+        this.model = model;
     }
 
-    @FXML
-    void onField01Click() {
-        game();
-        field01.setText(symbol);
-        table[0][1] = symbol;
-        field01.setDisable(true);
-        checkWinner();
-    }
-
-    @FXML
-    void onField02Click() {
-        game();
-        field02.setText(symbol);
-        table[0][2] = symbol;
-        field02.setDisable(true);
-        checkWinner();
-    }
-
-    @FXML
-    void onField10Click() {
-        game();
-        field10.setText(symbol);
-        table[1][0] = symbol;
-        field10.setDisable(true);
-        checkWinner();
-    }
-
-    @FXML
-    void onField11Click() {
-        game();
-        field11.setText(symbol);
-        table[1][1] = symbol;
-        field11.setDisable(true);
-        checkWinner();
-    }
-
-    @FXML
-    void onField12Click() {
-        game();
-        field12.setText(symbol);
-        table[1][2] = symbol;
-        field12.setDisable(true);
-        checkWinner();
-    }
-
-    @FXML
-    void onField20Click() {
-        game();
-        field20.setText(symbol);
-        table[2][0] = symbol;
-        field20.setDisable(true);
-        checkWinner();
-    }
-
-    @FXML
-    void onField21Click() {
-        game();
-        field21.setText(symbol);
-        table[2][1] = symbol;
-        field21.setDisable(true);
-        checkWinner();
-    }
-
-    @FXML
-    void onField22Click() {
-        game();
-        field22.setText(symbol);
-        table[2][2] = symbol;
-        field22.setDisable(true);
-        checkWinner();
-    }
-
-    public void game() {
-        if (i % 2 == 0) {
-            symbol = "X";
-            who.setText("O");
-        } else {
-            symbol = "O";
-            who.setText("X");
-        }
-        i++;
+    public String handleGameStep(int fieldCoordY, int fieldCoordX){
+        game(fieldCoordY, fieldCoordX);
+        return symbol;
     }
 
     public void checkWinner() {
-        if ((table[0][0].equals("X") && table[0][1].equals("X") && table[0][2].equals("X"))
-                || (table[1][0].equals("X") && table[1][1].equals("X") && table[1][2].equals("X"))
-                || (table[2][0].equals("X") && table[2][1].equals("X") && table[2][2].equals("X"))
-                || (table[0][0].equals("X") && table[1][0].equals("X") && table[2][0].equals("X"))
-                || (table[0][1].equals("X") && table[1][1].equals("X") && table[2][1].equals("X"))
-                || (table[0][2].equals("X") && table[1][2].equals("X") && table[2][2].equals("X"))
-                || (table[0][0].equals("X") && table[1][1].equals("X") && table[2][2].equals("X"))
-                || (table[2][0].equals("X") && table[1][1].equals("X") && table[0][2].equals("X"))) {
-            labelWinner.setText("Победа X");
-            disableAll();
-            winX();
+        boolean isSomeoneWin = false;
+        boolean isWinnerX = false;
+        String winnerStr = "";
+
+        if (checkWinner(FieldState.CROSS.toString())) {
+            winnerStr = "Победа X";
+            isSomeoneWin = true;
+            isWinnerX = true;
         }
-        if ((table[0][0].equals("O") && table[0][1].equals("O") && table[0][2].equals("O"))
-                || (table[1][0].equals("O") && table[1][1].equals("O") && table[1][2].equals("O"))
-                || (table[2][0].equals("O") && table[2][1].equals("O") && table[2][2].equals("O"))
-                || (table[0][0].equals("O") && table[1][0].equals("O") && table[2][0].equals("O"))
-                || (table[0][1].equals("O") && table[1][1].equals("O") && table[2][1].equals("O"))
-                || (table[0][2].equals("O") && table[1][2].equals("O") && table[2][2].equals("O"))
-                || (table[0][0].equals("O") && table[1][1].equals("O") && table[2][2].equals("O"))
-                || (table[2][0].equals("O") && table[1][1].equals("O") && table[0][2].equals("O"))) {
-            labelWinner.setText("Победа O");
-            disableAll();
-            winO();
+
+        if (checkWinner(FieldState.TOE.toString())) {
+            winnerStr = "Победа O";
+            isSomeoneWin = true;
+            isWinnerX = false;
+        }
+
+        if(isSomeoneWin){
+            changeScore(isWinnerX);
+            view.showWinner(winnerStr);
+            view.showScores(String.valueOf(scoreX), String.valueOf(scoreO));
+            i = 1;
         }
     }
 
-    public void disableAll() {
-        field00.setDisable(true);
-        field01.setDisable(true);
-        field02.setDisable(true);
-        field10.setDisable(true);
-        field11.setDisable(true);
-        field12.setDisable(true);
-        field20.setDisable(true);
-        field21.setDisable(true);
-        field22.setDisable(true);
-
+    public void resetGameBoard() {
+        model.resetTable();
+        view.setUpGameBoardForNewGame();
     }
 
-    public void winX() {
-        plX++;
-        String playerX = String.valueOf(plX);
-        scoreX.setText(playerX);
+    boolean checkWinner(String symbol){
+        return (model.getTableField(0,0).equals(symbol) && model.getTableField(0,1).equals(symbol) && model.getTableField(0,2).equals(symbol))
+                || (model.getTableField(1,0).equals(symbol) && model.getTableField(1,1).equals(symbol) && model.getTableField(1,2).equals(symbol))
+                || (model.getTableField(2,0).equals(symbol) && model.getTableField(2,1).equals(symbol) && model.getTableField(2,2).equals(symbol))
+                || (model.getTableField(0,0).equals(symbol) && model.getTableField(1,0).equals(symbol) && model.getTableField(2,0).equals(symbol))
+                || (model.getTableField(0,1).equals(symbol) && model.getTableField(1,1).equals(symbol) && model.getTableField(2,1).equals(symbol))
+                || (model.getTableField(0,2).equals(symbol) && model.getTableField(1,2).equals(symbol) && model.getTableField(2,2).equals(symbol))
+                || (model.getTableField(0,0).equals(symbol) && model.getTableField(1,1).equals(symbol) && model.getTableField(2,2).equals(symbol))
+                || (model.getTableField(2,0).equals(symbol) && model.getTableField(1,1).equals(symbol) && model.getTableField(0,2).equals(symbol));
     }
 
-    public void winO() {
-        plO++;
-        String playerO = String.valueOf(plO);
-        scoreO.setText(playerO);
+    private void changeScore(boolean isWinnerX) {
+        if (isWinnerX) {
+            scoreX++;
+        } else {
+            scoreO++;
+        }
+        String playerX = String.valueOf(scoreX);
+        String playerO = String.valueOf(scoreO);
+        view.showScores(playerX, playerO);
     }
 
-    @FXML
-    public void onPlayAgainClick() {
-        table[0][0] = " ";
-        field00.setText(" ");
-        field00.setDisable(false);
-        table[0][1] = " ";
-        field01.setText(" ");
-        field01.setDisable(false);
-        table[0][2] = " ";
-        field02.setText(" ");
-        field02.setDisable(false);
-        table[1][0] = " ";
-        field10.setText(" ");
-        field10.setDisable(false);
-        table[1][1] = " ";
-        field11.setText(" ");
-        field11.setDisable(false);
-        table[1][2] = " ";
-        field12.setText(" ");
-        field12.setDisable(false);
-        table[2][0] = " ";
-        field20.setText(" ");
-        field20.setDisable(false);
-        table[2][1] = " ";
-        field21.setText(" ");
-        field21.setDisable(false);
-        table[2][2] = " ";
-        field22.setText(" ");
-        field22.setDisable(false);
-        labelWinner.setText(" ");
+    private void game(int fieldCoordY, int fieldCoordX) {
+        String currentPlayer;
+        if (i % 2 == 0) {
+            symbol = FieldState.CROSS.toString();
+            currentPlayer = FieldState.TOE.toString();
+        } else {
+            symbol = FieldState.TOE.toString();
+            currentPlayer = FieldState.CROSS.toString();
+        }
+        model.setValue(fieldCoordY, fieldCoordX, symbol);
+        view.showCurrentPlayer(currentPlayer);
+        i++;
     }
 }
